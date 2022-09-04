@@ -1,0 +1,18 @@
+{
+  "name": "azd-migration",
+  "version": "1.0.0",
+  "description": "Sample Function Project to migrate to azd sample setup",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "prestart": "npm run build",
+    "start": "func start",
+    "test": "echo \"No tests yet...\""
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@azure/functions": "3.2.0",
+    "@types/node": "16.x",
+    "typescript": "4.8.2"
+  }
+}

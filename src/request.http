@@ -1,0 +1,13 @@
+###
+POST http://localhost:7071/api/SampleBlobOutputFunction
+Content-Type: application/json
+
+{
+  "id": "{{$guid}}",
+  "nickName": "Hulk",
+  "email":"bruce.banner@avengers.com",
+  "location": {
+      "region": "massachusetts",
+      "country": "usa"
+  }
+}      

@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: azure-functions-blob
+metadata:
+  template: azure-functions-blob@0.0.1-beta
+services:
+  api:
+    project: src
+    language: ts
+    host: function
