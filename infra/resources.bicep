@@ -1,30 +1,77 @@
-
-// CONSTRUCTION IN PROGRESS
-
 param location string
 param principalId string = ''
 param resourceToken string
 param tags object
 
 var abbrs = loadJsonContent('abbreviations.json')
+var blobContainerName = 'players'
+var blobStorageName = 'blobfunc'
+var blobStorageSecretName = 'BLOB-CONNECTION-STRING'
 
-resource web 'Microsoft.Web/staticSites@2022-03-01' = {
-  name: '${abbrs.webStaticSites}${resourceToken}'
+resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' = {
+  name: '${abbrs.storageStorageAccounts}${resourceToken}'
   location: location
-  tags: union(tags, { 'azd-service-name': 'web' })
+  tags: tags
+  kind: 'StorageV2'
   sku: {
-    name: 'Free'
-    tier: 'Free'
+    name: 'Standard_LRS'
   }
   properties: {
-    provider: 'Custom'
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
   }
 }
 
-resource api 'Microsoft.Web/sites@2022-03-01' = {
+resource blobstorageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
+  name: '${abbrs.storageStorageAccounts}${resourceToken}${blobStorageName}'
+  location: location
+  tags: tags
+  kind: 'Storage'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
+  }
+}
+
+resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-05-01' = {
+  name: '${blobstorageAccount.name}/default/${blobContainerName}'
+  properties: {
+    publicAccess: 'None'
+    metadata: {}
+  }
+}
+
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: '${abbrs.webServerFarms}${resourceToken}'
+  location: location
+  tags: tags
+  sku: {
+    name: 'Y1'
+    tier: 'Dynamic'
+    size: 'Y1'
+    family: 'Y'
+  }
+  kind: 'functionapp'
+  properties: {
+    reserved: true
+  }
+}
+
+resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   name: '${abbrs.webSitesFunctions}api-${resourceToken}'
   location: location
-  tags: union(tags, { 'azd-service-name': 'api' })
+  tags: union(tags, { 'azd-function-name': 'function 1' })
   kind: 'functionapp,linux'
   properties: {
     serverFarmId: appServicePlan.id
@@ -34,14 +81,8 @@ resource api 'Microsoft.Web/sites@2022-03-01' = {
       alwaysOn: false
       functionAppScaleLimit: 200
       minimumElasticInstanceCount: 0
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
       use32BitWorkerProcess: false
-      cors: {
-        allowedOrigins: [
-          'https://ms.portal.azure.com'
-          'https://${web.properties.defaultHostname}'
-        ]
-      }
     }
     clientAffinityEnabled: false
     httpsOnly: true
@@ -59,8 +100,8 @@ resource api 'Microsoft.Web/sites@2022-03-01' = {
       FUNCTIONS_EXTENSION_VERSION: '~4'
       FUNCTIONS_WORKER_RUNTIME: 'node'
       SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
-      AZURE_COSMOS_CONNECTION_STRING_KEY: 'AZURE-COSMOS-CONNECTION-STRING'
-      AZURE_COSMOS_DATABASE_NAME: cosmos::database.name
+      //BLOB_STORAGE_CONNECTION_STRING: 'DefaultEndpointsProtocol=https;AccountName=${blobstorageAccount.name};AccountKey=${blobstorageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+      BLOB_STORAGE_CONNECTION_STRING: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/${blobStorageSecretName})'
       AZURE_KEY_VAULT_ENDPOINT: keyVault.properties.vaultUri
     }
   }
@@ -90,22 +131,6 @@ resource api 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
-  name: '${abbrs.webServerFarms}${resourceToken}'
-  location: location
-  tags: tags
-  sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
-    size: 'Y1'
-    family: 'Y'
-  }
-  kind: 'functionapp'
-  properties: {
-    reserved: true
-  }
-}
-
 resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
   name: '${abbrs.keyVaultVaults}${resourceToken}'
   location: location
@@ -118,7 +143,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
     accessPolicies: concat([
         {
-          objectId: api.identity.principalId
+          objectId: functionApp.identity.principalId
           permissions: {
             secrets: [
               'get'
@@ -141,10 +166,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
       ] : [])
   }
 
-  resource cosmosConnectionString 'secrets' = {
-    name: 'AZURE-COSMOS-CONNECTION-STRING'
+  resource blobConnectionString 'secrets@2022-07-01' = {
+    name: '${blobStorageSecretName}'
     properties: {
-      value: cosmos.listConnectionStrings().connectionStrings[0].connectionString
+      value: 'DefaultEndpointsProtocol=https;AccountName=${blobstorageAccount.name};AccountKey=${blobstorageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
     }
   }
 }
@@ -174,108 +199,7 @@ module applicationInsightsResources 'applicationinsights.bicep' = {
   }
 }
 
-resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
-  name: '${abbrs.storageStorageAccounts}${resourceToken}'
-  location: location
-  tags: tags
-  kind: 'StorageV2'
-  sku: {
-    name: 'Standard_LRS'
-  }
-  properties: {
-    minimumTlsVersion: 'TLS1_2'
-    allowBlobPublicAccess: false
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
-    }
-  }
-}
-
-resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
-  name: '${abbrs.documentDBDatabaseAccounts}${resourceToken}'
-  kind: 'MongoDB'
-  location: location
-  tags: tags
-  properties: {
-    consistencyPolicy: {
-      defaultConsistencyLevel: 'Session'
-    }
-    locations: [
-      {
-        locationName: location
-        failoverPriority: 0
-        isZoneRedundant: false
-      }
-    ]
-    databaseAccountOfferType: 'Standard'
-    enableAutomaticFailover: false
-    enableMultipleWriteLocations: false
-    apiProperties: {
-      serverVersion: '4.0'
-    }
-    capabilities: [
-      {
-        name: 'EnableServerless'
-      }
-    ]
-  }
-
-  resource database 'mongodbDatabases' = {
-    name: 'Todo'
-    properties: {
-      resource: {
-        id: 'Todo'
-      }
-    }
-
-    resource list 'collections' = {
-      name: 'TodoList'
-      properties: {
-        resource: {
-          id: 'TodoList'
-          shardKey: {
-            _id: 'Hash'
-          }
-          indexes: [
-            {
-              key: {
-                keys: [
-                  '_id'
-                ]
-              }
-            }
-          ]
-        }
-      }
-    }
-
-    resource item 'collections' = {
-      name: 'TodoItem'
-      properties: {
-        resource: {
-          id: 'TodoItem'
-          shardKey: {
-            _id: 'Hash'
-          }
-          indexes: [
-            {
-              key: {
-                keys: [
-                  '_id'
-                ]
-              }
-            }
-          ]
-        }
-      }
-    }
-  }
-}
-
-//output AZURE_COSMOS_CONNECTION_STRING_KEY string = 'AZURE-COSMOS-CONNECTION-STRING'
-//output AZURE_COSMOS_DATABASE_NAME string = cosmos::database.name
+output AZURE_BLOB_CONNECTION_STRING_KEY string = 'BLOB_STORAGE_CONNECTION_STRING'
 output AZURE_KEY_VAULT_ENDPOINT string = keyVault.properties.vaultUri
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = applicationInsightsResources.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING
-//output WEB_URI string = 'https://${web.properties.defaultHostname}'
-//output API_URI string = 'https://${api.properties.defaultHostName}'
+output FUNCTIONS_URI string = 'https://${functionApp.properties.defaultHostName}'

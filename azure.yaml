@@ -5,6 +5,7 @@ metadata:
   template: azure-functions-blob@0.0.1-beta
 services:
   api:
+    resourceName: func-api-vwqrio2hyvrds
     project: src
     language: ts
     host: function

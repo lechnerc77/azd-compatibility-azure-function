@@ -34,12 +34,9 @@ module resources 'resources.bicep' = {
 }
 
 
-//output AZURE_COSMOS_CONNECTION_STRING_KEY string = resources.outputs.AZURE_COSMOS_CONNECTION_STRING_KEY
-//output AZURE_COSMOS_DATABASE_NAME string = resources.outputs.AZURE_COSMOS_DATABASE_NAME
+output AZURE_COSMOS_CONNECTION_STRING_KEY string = resources.outputs.AZURE_BLOB_CONNECTION_STRING_KEY
 output AZURE_KEY_VAULT_ENDPOINT string = resources.outputs.AZURE_KEY_VAULT_ENDPOINT
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = resources.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING
-//output REACT_APP_WEB_BASE_URL string = resources.outputs.WEB_URI
-//output REACT_APP_API_BASE_URL string = resources.outputs.API_URI
-//output REACT_APP_APPLICATIONINSIGHTS_CONNECTION_STRING string = resources.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING
+output FUNCTION_URL string = resources.outputs.FUNCTIONS_URI
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
