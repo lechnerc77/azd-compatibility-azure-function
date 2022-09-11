@@ -31,8 +31,7 @@
         "dbaeumer.vscode-eslint"
     ],
     "forwardPorts": [
-        3000,
-        3100
+        7071
     ],
     "postCreateCommand": "",
     "remoteUser": "vscode"

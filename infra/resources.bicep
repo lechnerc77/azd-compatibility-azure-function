@@ -100,7 +100,6 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
       FUNCTIONS_EXTENSION_VERSION: '~4'
       FUNCTIONS_WORKER_RUNTIME: 'node'
       SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
-      //BLOB_STORAGE_CONNECTION_STRING: 'DefaultEndpointsProtocol=https;AccountName=${blobstorageAccount.name};AccountKey=${blobstorageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
       BLOB_STORAGE_CONNECTION_STRING: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/${blobStorageSecretName})'
       AZURE_KEY_VAULT_ENDPOINT: keyVault.properties.vaultUri
     }
