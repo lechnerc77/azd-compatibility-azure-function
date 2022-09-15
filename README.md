@@ -81,12 +81,14 @@ name: azure-functions-blob
 metadata:
   template: azure-functions-blob@0.0.1-beta
 services:
-  api:
+   blob-output-binding:
     project: src
     language: ts
     host: function
 
 ```
+
+Look at the yaml file to see what is possible to configure.
 
 You get excellent support from the yaml language server referencing the schema.
 
@@ -105,7 +107,6 @@ You get excellent support from the yaml language server referencing the schema.
 
 ## Remarks
 
-- 
 - like the yaml language server for azure.yaml
 - Intentionally left out Azur DevOps component
 - No test folder available
@@ -123,6 +124,10 @@ Best way to structure (sequence)
 
 Interesting: <https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json>:
 
+Error due to not understanding/thinking about how the CLI links together the resource with the deployment:
+
+```bash
+
 ```json
 "properties": {
                     "resourceName": {
@@ -131,12 +136,20 @@ Interesting: <https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.
                         "description": "Optional. If not specified, the resource name will be constructed from current environment name concatenated with service name (<environment-name><resource-name>, for example 'prodapi')."
 ```
 
-The funny error is: 
+The error is:
 
 ```json
 {"error":{"code":"ResourceNotFound","message":"The Resource 'Microsoft.Web/sites/test-app-migrationapi' under resource group 'rg-test-app-migration' was not found. For more details please go to https://aka.ms/ARMResourceNotFoundFix"}}
 DEBUG: cli.azure.cli.core.util: azure.cli.core.util.handle_exception is called with an exception:
 ```
+
+See issue [Deployment of Function - Targeting Function App](https://github.com/Azure/azure-dev/issues/635) for more background information on how the CLI determines/glues the Function App to the source/deployment of the app:
+
+> It does this by looking at all the resource groups for your application and then for a resource tagged with azd-service-name with a value that matches the key for the service in azure.yaml (in your sample app, this is api).
+
+So the tags and the matching information in the `azure.yaml` file are important; makes sense, but not documented.
+
+Off Topic: Upgrade of CLI works, just reinstall it as documented on GitHub. 
 
 ## References
 

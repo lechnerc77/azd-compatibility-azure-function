@@ -71,7 +71,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
 resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   name: '${abbrs.webSitesFunctions}api-${resourceToken}'
   location: location
-  tags: union(tags, { 'azd-function-name': 'function 1' })
+  tags: union(tags, { 'azd-service-name': 'blob-output-binding' })
   kind: 'functionapp,linux'
   properties: {
     serverFarmId: appServicePlan.id
