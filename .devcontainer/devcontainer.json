@@ -8,9 +8,7 @@
     },
     "features": {
         "github-cli": "2",
-        "azure-cli": "2.38",
-        "python": "os-provided",
-        "dotnet": "6.0",
+        "azure-cli": "2.40",
         "docker-from-docker": "20.10",
         "node": {
             "version": "16",
@@ -24,8 +22,6 @@
         "ms-azuretools.vscode-azurefunctions",
         "ms-vscode.vscode-node-azure-pack",
         "ms-vscode.js-debug",
-        "ms-dotnettools.csharp",
-        "ms-dotnettools.vscode-dotnet-runtime",
         "esbenp.prettier-vscode",
         "eg2.vscode-npm-script",
         "dbaeumer.vscode-eslint"

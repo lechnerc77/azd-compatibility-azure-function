@@ -149,7 +149,17 @@ See issue [Deployment of Function - Targeting Function App](https://github.com/A
 
 So the tags and the matching information in the `azure.yaml` file are important; makes sense, but not documented.
 
-Off Topic: Upgrade of CLI works, just reinstall it as documented on GitHub. 
+Off Topic: Upgrade of CLI works, just reinstall it as documented on GitHub.
+
+Change gitingore to see  <https://code.visualstudio.com/docs/remote/troubleshooting#_resolving-git-line-ending-issues-in-containers-resulting-in-many-modified-files>:
+
+```bash
+* text=auto eol=lf
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf
+```
+
+When coming from Windows
 
 ## References
 
