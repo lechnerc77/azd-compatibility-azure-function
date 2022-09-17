@@ -22,7 +22,7 @@ In order to align with the best practices showcased in the samples that are refe
 - The connection string for the Blob Storage is stored in an Azure Key Vault and referenced in the Function App's Application Settings.
 - In accordance to the samples Application Insights component should be deployed.
 
-As a blueprint for the project layout, I took the azd sample ToDo sample application using [Static Web Apps](https://github.com/Azure-Samples/todo-nodejs-mongo-swa-func) as this is the one that is closest to our setup. So throughout the journey I either compared or copied snippets from this sample and adjusted them accordingly. 
+As a blueprint for the project layout, I took the azd sample ToDo sample application using [Static Web Apps](https://github.com/Azure-Samples/todo-nodejs-mongo-swa-func) as this is the one that is closest to our setup. So throughout the journey I either compared or copied snippets from this sample and adjusted them accordingly.
 
 This is the way - let us see what we have to do in oder to make create an azd compatible project.
 
@@ -103,7 +103,7 @@ services:
 
 The support due to the referenced language server is great, so you get excellent support when entering data.
 
-> 📝 Remark - The file used as bassi for the language server is definitely worth closer look as it contains more options than shown above and also give some helpful insights on the dfault values and hoe optional parameters are derived if not provided explicitly.
+> 📝 Remark - The file used as bassi for the language server is definitely worth closer look as it contains more options than shown above and also give some helpful insights on the default values and hoe optional parameters are derived if not provided explicitly.
 
 There is not more to do, so the basis for the deployment of the source code is in place. Step 5 is done. Let us head over to the last puzzle piece we need to get in place, the infrastructure.
 
@@ -150,7 +150,7 @@ resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2
 }
 ```
 
-My goal was to store the connection string of the Blob storage in Azure Key Vault and reference it in the Azure Function App configuration. In contrast to the Cosmos DB resource the Azure srage in bicep does not come with a `getConnectionString` method, I needed to construct the connection string manually. The secret resource looks like this:
+My goal was to store the connection string of the Blob storage in Azure Key Vault and reference it in the Azure Function App configuration. In contrast to the Cosmos DB resource the Azure storage in bicep does not come with a `getConnectionString` method, I needed to construct the connection string manually. The secret resource looks like this:
 
 ```bicep
   resource blobConnectionString 'secrets@2022-07-01' = {
@@ -182,16 +182,16 @@ To bring the things together I added the reference to the  Function App configur
 
 I also updated some resource versions to latest and greatest.
 
-With this everything is in place to start the provisioning of the infrastructure and deploy the Azure Functions app ... at least so I thought. 
+With this everything is in place to start the provisioning of the infrastructure and deploy the Azure Functions app ... at least so I thought.
 
 ## Connecting the dots
 
-In order to identify issues in the different phases of `azd up` I executed the pahses manually via the dedicated commands of `azd` and appending the `--debug`lag to get a more verbose output.
+In order to identify issues in the different phases of `azd up` I executed the phases manually via the dedicated commands of `azd` and appending the `--debug`lag to get a more verbose output.
 
 The command sequence was:
 
 - `azd init` - all good (what should go wrong here)
-- `azd provisiong` - all good (not on the first run, but that was just stupid me struggling with bicep)
+- `azd provision` - all good (not on the first run, but that was just stupid me struggling with bicep)
 - `azd deploy` - all ... not good
 
 The deployment failed with an interesting error message:
@@ -200,6 +200,7 @@ The deployment failed with an interesting error message:
 {"error":{"code":"ResourceNotFound","message":"The Resource 'Microsoft.Web/sites/test-app-migrationapi' under resource group 'rg-test-app-migration' was not found. For more details please go to https://aka.ms/ARMResourceNotFoundFix"}}
 DEBUG: cli.azure.cli.core.util: azure.cli.core.util.handle_exception is called with an exception:
 ```
+
 > 📝 Remark - I changed the naming throughout the journey, so don't be confused if you do not find the names in the resources in the GitHub repository
 
 Hmmm .. what does that mean? I did not explicitly specify the resource where the app should be deployed to (and of course was assuming some hidden magic would find it out). My first stop to sort things out was the `yaml` file serving the `azure.yaml` structure. Here I got the first hint when looking at the property `resourceName`:
@@ -216,7 +217,7 @@ Okay, that explains the error message. Setting the `resourceName` explicitly wit
 
 Not finding information in the documentation I created an issue in the GitHub repo of the CLI ([Deployment of Function - Targeting Function App](https://github.com/Azure/azure-dev/issues/635)) and I got a very fast response explaining the setup. The connection between the infrastructure and the resource that will host the deployed app is determined "*by looking at all the resource groups for your application and then for a resource tagged with azd-service-name with a value that matches the key for the service in azure.yaml*".
 
-So the glue between the service name in the `azure.yaml` and the corresponding resource is the tag in the `resource.bicep` file. I like that approach, but did not think about that although in the hindsight it makes perfect sense. 
+So the glue between the service name in the `azure.yaml` and the corresponding resource is the tag in the `resource.bicep` file. I like that approach, but did not think about that although in the hindsight it makes perfect sense.
 
 In my case I adjusted the tagging to:
 
@@ -232,7 +233,7 @@ With that everything works as expected, so full success!
 
 ## Summary and remarks
 
-Overall the conversion of an existing project into an `azd`-compatible setup gave me a good experience and the effort was low (being aware that this was not a battle-hardened project running in production), so I think th effort is worth the benefit. I cannot state the exact time I needed to get things going (at least with my level of bicep knowledge it would not be fair to take that as a fair measure), but I am quite sure the adjustment can be done in well below an hour. In case you have the Infrastructure as Code already in place, it is probably straight forward to get the setup and we are in a range of minutes. However, if something goes wrong, the feedback loop takes some time when you have to fix e.g., the `bicep files` (it is always the last resource to be deployed that throws an error .. always). This feedback loop would maybe be reduced by improving the preflight checks of bicep (like naming of storage accounts that seems not to be checked). 
+Overall the conversion of an existing project into an `azd`-compatible setup gave me a good experience and the effort was low (being aware that this was not a battle-hardened project running in production), so I think th effort is worth the benefit. I cannot state the exact time I needed to get things going (at least with my level of bicep knowledge it would not be fair to take that as a fair measure), but I am quite sure the adjustment can be done in well below an hour. In case you have the Infrastructure as Code already in place, it is probably straight forward to get the setup and we are in a range of minutes. However, if something goes wrong, the feedback loop takes some time when you have to fix e.g., the `bicep files` (it is always the last resource to be deployed that throws an error .. always). This feedback loop would maybe be reduced by improving the preflight checks of bicep (like naming of storage accounts that seems not to be checked).
 
 In case of an error the azd CLI returns the correlation ID of the provisioning, so one can find the details of the error via:
 
@@ -252,5 +253,5 @@ Useful references if you want to try things out on your own:
 
 - [azd documentation](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview?tabs=nodejs)
 - [bicep documentation](https://learn.microsoft.com/azure/azure-resource-manager/bicep/)
-- [bicep playgorund](https://bicepdemo.z22.web.core.windows.net/)
+- [bicep playground](https://bicepdemo.z22.web.core.windows.net/)
 - [Azure Developer CLI (azd) – September 2022 Release](https://devblogs.microsoft.com/azure-sdk/azure-developer-cli-azd-september-2022-release/) - information and links for Terraform
