@@ -1,5 +1,7 @@
 # Sample compatibility journey for the Azure Developer CLI
 
+> ⚠ **The steps and the code presented in this branch are described and built in accordiance to the Azure Developer CLI version [0.2.0-beta.1 (2022-09-14)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.1)**
+
 ## Introduction
 
 A few weeks ago the Azure Developer CLI (azd) was released in public beta (you find the announcement [here](https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-developer-cli-a-faster-way-to-build-apps-for-the-cloud/)). As I think that this is a very valuable tool for developers, I already made a short dive into the CLI which resulted in several [videos](https://youtube.com/playlist?list=PLmZLSvJAm8FbFq2XhqaPZgIzl6kewz1HD) and a [blog post](https://dev.to/lechnerc77/the-azure-developer-cli-a-walk-through-22fm) summarizing these videos.
