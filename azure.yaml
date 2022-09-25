@@ -7,4 +7,4 @@ services:
   blob-output-binding:
     project: src
     language: ts
-    host: function
+    host: function    
