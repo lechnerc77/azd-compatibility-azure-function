@@ -4,33 +4,6 @@ param principalId string = ''
 
 var blobStorageSecretName = 'BLOB-CONNECTION-STRING'
 
-/*
-var abbrs = loadJsonContent('abbreviations.json')
-var blobContainerName = 'players'
-var blobStorageName = 'blobfunc'
-*/
-
-// The function app
-module function './app/function.bicep' = {
-  name: 'function'
-  params: {
-    environmentName: environmentName
-    location: location
-    applicationInsightsName: monitoring.outputs.applicationInsightsName
-    appServicePlanId: appServicePlan.outputs.appServicePlanId
-    storageAccountName: storage.outputs.name
-  }
-}
-
-// Second Storage Account for Output Binding
-module outputstorage './app/storage-output.bicep' = {
-  name: 'outputstorage'
-  params: {
-    environmentName: environmentName
-    location: location
-  }
-}
-
 // Create an App Service Plan to group applications under the same payment plan and SKU
 module appServicePlan './core/host/appserviceplan-functions.bicep' = {
   name: 'appserviceplan'
@@ -40,9 +13,18 @@ module appServicePlan './core/host/appserviceplan-functions.bicep' = {
   }
 }
 
-// Backing storage for Azure functions backend API
+// Backing storage for Azure Functions
 module storage './core/storage/storage-account.bicep' = {
   name: 'storage'
+  params: {
+    environmentName: environmentName
+    location: location
+  }
+}
+
+// Second Storage Account for Output Binding
+module outputstorage './app/storage-output.bicep' = {
+  name: 'outputstorage'
   params: {
     environmentName: environmentName
     location: location
@@ -67,6 +49,21 @@ module outputStorageSecret './corelocal/security/keyvault-blobaccess-secret.bice
     blobStorageName: outputstorage.outputs.blobStorageName
     keyVaultName: keyVault.outputs.keyVaultName
     secretName: blobStorageSecretName
+  }
+}
+
+// The function app
+module function './app/function.bicep' = {
+  name: 'function'
+  params: {
+    environmentName: environmentName
+    location: location
+    applicationInsightsName: monitoring.outputs.applicationInsightsName
+    appServicePlanId: appServicePlan.outputs.appServicePlanId
+    storageAccountName: storage.outputs.name
+    appSettings: {
+      BLOB_STORAGE_CONNECTION_STRING: '@Microsoft.KeyVault(SecretUri=${keyVault.outputs.keyVaultEndpoint}secrets/${blobStorageSecretName})'
+    }
   }
 }
 
