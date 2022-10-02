@@ -6,7 +6,7 @@ var blobContainerName = 'players'
 
 // Backing storage for Azure functions output binding
 module blobStorageAccount '../corelocal/storage/enhanced-storage-account.bicep' = {
-  name: 'outputStorage'
+  name: 'outputStorageAccount'
   params: {
     blobStorageNamePostfix: blobStorageNamePostfix
     environmentName: environmentName
@@ -22,5 +22,6 @@ module blobStorageContainer '../corelocal/storage/storage-container.bicep' = {
     blobContainerName: blobContainerName
   }
 }
+
 
 output blobStorageName string = blobStorageAccount.outputs.name

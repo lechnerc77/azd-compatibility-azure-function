@@ -1,11 +1,12 @@
-param environmentName string
 param location string = resourceGroup().location
+param environmentName string
 
 param applicationInsightsName string
 param appServicePlanId string
 param appSettings object = {}
-param serviceName string = 'api'
+param serviceName string = 'blob-output-binding'
 param storageAccountName string
+param keyVaultName string = ''
 
 module function '../core/host/functions-node.bicep' = {
   name: '${serviceName}-functions-node-module'
@@ -17,6 +18,7 @@ module function '../core/host/functions-node.bicep' = {
     appServicePlanId: appServicePlanId
     serviceName: serviceName
     storageAccountName: storageAccountName
+    keyVaultName: keyVaultName
   }
 }
 

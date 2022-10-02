@@ -61,9 +61,20 @@ module function './app/function.bicep' = {
     applicationInsightsName: monitoring.outputs.applicationInsightsName
     appServicePlanId: appServicePlan.outputs.appServicePlanId
     storageAccountName: storage.outputs.name
+    keyVaultName: keyVault.outputs.keyVaultName
     appSettings: {
       BLOB_STORAGE_CONNECTION_STRING: '@Microsoft.KeyVault(SecretUri=${keyVault.outputs.keyVaultEndpoint}secrets/${blobStorageSecretName})'
     }
+  }
+}
+
+module keyVaultAccess './core/security/keyvault-access.bicep' = {
+  name: 'keyvault-access-for-function'
+  params: {
+    environmentName: environmentName
+    location: location
+    keyVaultName: keyVault.outputs.keyVaultName
+    principalId: function.outputs.FUNCTION_IDENTITY_PRINCIPAL_ID
   }
 }
 

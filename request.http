@@ -1,5 +1,8 @@
-###
-POST http://localhost:7071/api/SampleBlobOutputFunction
+@localurl = http://localhost:7071/api/SampleBlobOutputFunction
+@remoteurl = <Put in your remote URL>
+
+### Send local request
+POST {{localurl}}
 Content-Type: application/json
 
 {
@@ -10,4 +13,19 @@ Content-Type: application/json
       "region": "massachusetts",
       "country": "usa"
   }
-}      
+}
+
+
+### Send real request
+POST {{remoteurl}}
+Content-Type: application/json
+
+{
+  "id": "{{$guid}}",
+  "nickName": "Hulk",
+  "email":"bruce.banner@avengers.com",
+  "location": {
+      "region": "massachusetts",
+      "country": "usa"
+  }
+}
