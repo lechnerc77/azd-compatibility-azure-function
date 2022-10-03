@@ -1,6 +1,6 @@
 # Sample compatibility journey for the Azure Developer CLI
 
-> ⚠ **The steps and the code presented in this branch are described and built in accordance to the Azure Developer CLI version [0.2.0-beta.1 (2022-09-14)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.1)**
+> ⚠ This branch contains the code and the description to make a plain Azure Functions project compatible with the Azure Developer CLI. The related blog post is available on dev.to as [The Azure Developer CLI - Compatibility journey for an Azure Functions Project](https://dev.to/lechnerc77/the-azure-developer-cli-compatibility-journey-for-an-azure-functions-project-3mc1). **The steps and the code are described and built in accordance to the Azure Developer CLI version [0.2.0-beta.1 (2022-09-14)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.1)**
 
 ## Introduction
 
