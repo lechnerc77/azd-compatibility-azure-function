@@ -4,9 +4,9 @@
 
 ## Introduction
 
-With the update of the Azure Developer CLI to version [0.2.0-beta.2 (2022-09-21)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.2) a change was introduced that affects the structuring of the bicep templates i.e. structuring them via modules (see also pull request [Rearrange Bicep Modules #548](https://github.com/Azure/azure-dev/pull/548)). 
+With the update of the Azure Developer CLI to version [0.2.0-beta.2 (2022-09-21)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.2) a change was introduced that affects the structuring of the bicep templates i.e. structuring them via modules (see also pull request [Rearrange Bicep Modules #548](https://github.com/Azure/azure-dev/pull/548)).
 
-> Remark: The setup presented here is also valid with the CLI version [0.3.0-beta.1](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.3.0-beta.1).
+> 📝 Remark : The setup presented here is also valid with the CLI version [0.3.0-beta.1](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.3.0-beta.1).
 
 ## What has changed
 
@@ -41,7 +41,7 @@ The resources that define your app are placed in a dedicated folder called `app`
 
 To get a hands-on impression on these changes I decided to test it for an existing azd-compatible project. The starting point is the azd-compatible Azure Functions project that I described in the blog post [The Azure Developer CLI - Compatibility journey for an Azure Functions Project](https://dev.to/lechnerc77/the-azure-developer-cli-compatibility-journey-for-an-azure-functions-project-3mc1). The focus lies onm restructuring the `infra` folder to get it compliant with the new setup.
 
-### Step 1 - cleaning up the folders
+### Step 1 - Cleaning up the folders
 
 First I renamed the existing `infra` folder to `infra020beta1` to have my existing and working setup still available and to cross check in case of issues. We can even use this folder in the project by pointing the `azure.yaml` file to the folder:
 
@@ -76,7 +76,7 @@ In addition i created a new folder called `app` which will become the home of my
 
 With that the basic folder structure is in place and we can move on to change the content.
 
-### Step 2 - the `main*.bicep` files
+### Step 2 - The `main*.bicep` files
 
 Let us first take a look at the `main.bicep` and the `main.parameters.bicep` files:
 
@@ -133,35 +133,293 @@ module monitoring './core/monitor/monitoring.bicep' = {
 }
 ```
 
-You already see the advantage of the new setup: no more spaghetti code for your resources and in case of changes they can be managed in one central place. The downside is that you need to take a dive into the files as they might be stacked (one module calling another one) with some defaulting and merging going on along the way.
+You already see the advantage of the new setup: no more "spaghetti code" for declaring the resources. In case of changes on the basic setup, those can be managed in one central place. The downside is that you need to take a dive into the files as they might be stacked (one module calling another one) with some defaulting and merging going on along the way.
 
-### Step 4 - our special storage setup
+I added the basic module-based setup also for the following resources:
 
-For the output binding we need an additional Azure Storage Account. Taking a closer look at the file `storage-account.bicep` in the `core/storage` folder we see that we have no option to influence the name of the storage account e.g., via a postfix.
+- Storage Account for the Azure Function vai  `./core/storage/storage-account.bicep`
+- Key Vault via `./core/security/keyvault.bicep`.
 
-In addition we need to create a container inside of the storage account. 
+In accordance to the new setup I added the application specific setups (Azure Function *per se* and the Azure Storage Account for the output binding) via:
 
-### Step 5 - storing the secret
+```bicep
+// Second Storage Account for Output Binding
+module outputstorage './app/storage-output.bicep' = {
+  name: 'outputstorage'
+  params: {
+    environmentName: environmentName
+    location: location
+  }
+}
 
-To access the storage account we want to store the access data as a secret in Azure Key Vault. By default the provided modules do not foresee this, so we must create a module.
+// The function app
+module function './app/function.bicep' = {
+  name: 'function'
+  params: {
+    environmentName: environmentName
+    location: location
+    applicationInsightsName: monitoring.outputs.applicationInsightsName
+    appServicePlanId: appServicePlan.outputs.appServicePlanId
+    storageAccountName: storage.outputs.name
+    keyVaultName: keyVault.outputs.keyVaultName
+    appSettings: {
+      BLOB_STORAGE_CONNECTION_STRING: '@Microsoft.KeyVault(SecretUri=${keyVault.outputs.keyVaultEndpoint}secrets/${blobStorageSecretName})'
+    }
+  }
+}
+```
 
-### Step 6 - mind the access
+> 📝 Remark - Be aware that we define the `BLOB_STORAGE_CONNECTION_STRING` via a reference to an Azure Key Vault secret. We will create the prerequisites for this in the next sections.
 
-To configure the access to the Key Vault and to the Blob Storage, we must store the reference to the key vault secret in the app settings
+With the very basic setup in place, we now focus on our specifics.
 
-For the access we need to make sure that a system assigned identity is created in our Azure Functions App and that the access policy in Azure Key Vault is set accordingly.
+### Step 4 - Our special storage setup
 
-> Digging deeper into the hierarchy of the Azure Function i.e.  Appservice app is needed as some "magic" is happening there. 
+For the output binding we need an additional Azure Storage Account. Taking a closer look at the file `storage-account.bicep` in the `core/storage` folder we see that we have no option to influence the name of the storage account e.g. via a postfix. It is predefined by:
 
-## My 2 cent
+```bicep
+var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 
-- Decent understanding of bicep is necessary as more features are used
-- reuse is hard to define up front, but good structure imho
-- You must go down the rabbit hole:
-api.bicep -> functions-node.bicep -> functions.biscep -> appservice.bicep -> 
+resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
+  name: '${abbrs.storageStorageAccounts}${resourceToken}'
+```
 
-- Only first step, I think the procedure itself should be used as a pattern
-- Overhead of files ... or not?
+In addition we need to create a container inside of the storage account which is not foreseen in the current content of the `core` modules. To stay in line with the setup I created a new folder called `corelocal` where I centralized my own reusable modules. I also mimicked the sub-folder structure, so I added a folder `storage`. Now I could add my own Storage Account `bicep` file called `enhanced-storage-account.bicep`:
+
+```bicep
+param environmentName string
+param location string = resourceGroup().location
+param blobStorageNamePostfix string = ''
+
+param allowBlobPublicAccess bool = false
+param kind string = 'StorageV2'
+param minimumTlsVersion string = 'TLS1_2'
+param sku object = { name: 'Standard_LRS' }
+
+var abbrs = loadJsonContent('../../abbreviations.json')
+var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+var tags = { 'azd-env-name': environmentName }
+var storageName = blobStorageNamePostfix != '' ? '${abbrs.storageStorageAccounts}${resourceToken}${blobStorageNamePostfix}' : '${abbrs.storageStorageAccounts}${resourceToken}dev'
+
+resource enhancedStorage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
+  name: storageName
+  location: location
+  tags: tags
+  kind: kind
+  sku: sku
+  properties: {
+    minimumTlsVersion: minimumTlsVersion
+    allowBlobPublicAccess: allowBlobPublicAccess
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
+  }
+}
+
+output name string = enhancedStorage.name
+```
+
+Basically, it is a copy & paste from the original one, with some additional logic to add a postfix, that is handed in via a parameter. I created the resource in a way that one could use this template also for the original storage account setup.
+
+In addition, We need a container created in the storage account. For that I created an additional `bicep` file called `storage-container.bicep`:
+
+```bicep
+param blobStorageName string = ''
+param blobContainerName string = 'dev'
+
+resource storageContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-05-01' = {
+  name: '${blobStorageName}/default/${blobContainerName}'
+  properties: {
+    publicAccess: 'None'
+    metadata: {}
+  }
+}
+```
+
+I referenced the parent Storage in the `name` parameter of my container using it as part of the relative path. You can also use the `parent` parameter, but then must adjust the `name` parameter accordingly as providing the parent information is only allowed in one place for this resource.
+
+Having this in place we are good to go to create the `infra\app\storage-output.bicep` file using the new building blocks as modules:
+
+```bicep
+param environmentName string
+param location string = resourceGroup().location
+
+var blobStorageNamePostfix = 'blobfunc'
+var blobContainerName = 'players'
+
+// Storage for Azure functions output binding
+module blobStorageAccount '../corelocal/storage/enhanced-storage-account.bicep' = {
+  name: 'outputStorageAccount'
+  params: {
+    blobStorageNamePostfix: blobStorageNamePostfix
+    environmentName: environmentName
+    location: location
+  }
+}
+
+// Container in the storage account
+module blobStorageContainer '../corelocal/storage/storage-container.bicep' = {
+  name: 'storageContainer'
+  params: {
+    blobStorageName: blobStorageAccount.outputs.name
+    blobContainerName: blobContainerName
+  }
+}
+
+
+output blobStorageName string = blobStorageAccount.outputs.name
+```
+
+That was not too complicated, so let us move on to the storage of the connection string to this Blob Storage in the Azure Key Vault.
+
+### Step 5 - Storing the secret
+
+We want to store the connection string to our Blob Storage in Azure Key Vault and later access it as a reference from the Azure Function app configuration. SO first things first, let us create the secret. As in the previous section there is no pre-defined `bicep` file available, so let us create one. TZo do so I created a `security` folder underneath the `corelocal` folder. Here we place the `bicep` file for the secret:
+
+```bicep
+param environmentName string
+param keyVaultName string = ''
+param secretName string = ''
+param blobStorageName string = ''
+
+var tags = { 'azd-env-name': environmentName }
+
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
+  name: keyVaultName
+}
+
+resource enhancedStorage 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
+  name: blobStorageName
+}
+
+resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2022-07-01' = {
+  name: secretName
+  tags: tags
+  parent: keyVault
+  properties: {
+    contentType: 'string'
+    value: 'DefaultEndpointsProtocol=https;AccountName=${enhancedStorage.name};AccountKey=${enhancedStorage.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+  }
+}
+```
+
+As we need to attach the secret to the storage and construct the value of our secret using information from the storage account, we must integrate the existing resources into this `bicep` file. To do so we use the `existing` keyword as described in the [official documentation](https://learn.microsoft.com/azure/azure-resource-manager/bicep/existing-resource).
+
+This new modules is then referenced from the `resources.bicep` file with the parameters filled via the output of the corresponding module calls:
+
+```bicep
+// attach output storage to keyvault
+module outputStorageSecret './corelocal/security/keyvault-blobaccess-secret.bicep' = {
+  name: 'keyVaultSecretForBlob'
+  params: {
+    environmentName: environmentName
+    blobStorageName: outputstorage.outputs.blobStorageName
+    keyVaultName: keyVault.outputs.keyVaultName
+    secretName: blobStorageSecretName
+  }
+}
+```
+
+This was a bit more tricky (at least for a `bicep` newbie), but doable and fits into the new infrastructure setup.
+
+Now we need to bring the pieces together in the Azure Function and the Azure Key Vault to get access to the secret.
+
+### Step 6 - Mind the access
+
+What do we need to do to grant the Azure Function app access to the Azure Key Vault? There are two things needed to get things going:
+
+1. Create a system assigned identity for the Azure Functions app
+2. Create the access policy in Key Vault for this identity via its principal ID
+
+Can we achieve that with the existing modules from `core`? Yes we can, but to understand what is going on you must take a dive into the hierarchy for Azure Functions and the Azure Functions app. Let us start from our part, namely the `function.bicep` that we create in the `app` folder:
+
+```bicep
+param location string = resourceGroup().location
+param environmentName string
+
+param applicationInsightsName string
+param appServicePlanId string
+param appSettings object = {}
+param serviceName string = 'blob-output-binding'
+param storageAccountName string
+param keyVaultName string = ''
+
+module function '../core/host/functions-node.bicep' = {
+  name: '${serviceName}-functions-node-module'
+  params: {
+    environmentName: environmentName
+    location: location
+    appSettings: appSettings
+    applicationInsightsName: applicationInsightsName
+    appServicePlanId: appServicePlanId
+    serviceName: serviceName
+    storageAccountName: storageAccountName
+    keyVaultName: keyVaultName
+  }
+}
+
+output FUNCTION_IDENTITY_PRINCIPAL_ID string = function.outputs.identityPrincipalId
+output FUNCTION_NAME string = function.outputs.name
+output FUNCTION_URI string = function.outputs.uri
+```
+
+> 📝 Remark - We implemented the call in the `resources.bicep` in a prior step. Be aware that we provided the parameter `keyVaultName` from there. This is important for wiring things up the right way.
+
+For the access we need to make sure that a system assigned identity is created in our Azure Functions App and that the access policy in Azure Key Vault is set accordingly. What do we have to set where?
+
+We now need to dive into the code of the predefined `bicep` files, to get it:
+
+- from our file the next stop is the `functions-node.bicep`. There is nothing relevant for our investigation, however it is interesting to see the defaulting of some parameters.
+- next stop is the `functions.bicep` file. And here we get our first clue about the managed identity:
+
+   ```bicep
+   param managedIdentity bool = !(empty(keyVaultName))
+
+   ...
+   module functions 'appservice.bicep' = {
+     name: '${serviceName}-functions'
+     params: {
+       ...
+       kind: kind
+       linuxFxVersion: linuxFxVersion
+       managedIdentity: managedIdentity
+       minimumElasticInstanceCount: minimumElasticInstanceCount
+       ...
+       }
+   }
+   ```
+
+The creation of a managed identity is based ion the fact if the keyVaultName is provided or not. That is really important to know and understand. So the first prerequisite is fulfilled for our setup. What about the second one namely the Key Vault Access policies? Let's dive deeper a bit deeper:
+
+The next stop is the `appservice.bicep` file that conatins the last missing puzzle pieces. In this file the access policy is created via:
+
+```bicep
+module keyVaultAccess '../security/keyvault-access.bicep' = if (!(empty(keyVaultName))) {
+  name: '${serviceName}-appservice-keyvault-access'
+  params: {
+    principalId: appService.identity.principalId
+    environmentName: environmentName
+    location: location
+  }
+}
+```
+
+This closes the loop and allows the Azure Function app to access the Azure Key Vault via the managed identity. And this is also the end of the infrastructure restructuring journey, as we have everything in place now.  
+
+## Summary and conclusion
+
+The progress and improvements of the Azure Developer CLI are coming fast. One of the major improvements of the 0.2.0-beta2 release was a complete overhaul of the infrastructure provisioning setup. I followed this refactoring in my sample project to get an idea what it means. In general I want to state that this new setup makes perfect sense and pushes the maturity of the Azure Developer CLI one step further and makes it even more appealing for platform and development teams in companies. The modularization of the bicep files with a central reuse "repository" is a good move and will support the maintainability on the long term. However, there is no free lunch and there is a price you have to pay:
+
+- To make use of the reuseable `bicep` files a more decent understanding of the `bicep` concepts is needed. This is something to keep in mind if you have members in your team that are not familiar with `bicep`.
+- In general I think reusable bits and pieces are hard to define up front. I think the Azure Developer CLI team did a good job, guided by the sample code. However, do not fall into the trap to expect everything to be in place in the `core` folder. Embrace the structure and fill in the gaps accordingly as I did for some missing parts in my project.
+- Take your time and go down the rabbit hole of the chain of `bicep` files to get an understand what happens where like how are the configurations merged, how are default values set etc. You get an idea of what I mean when looking at the section [Step 6 - Mind the access](#step-6---mind-the-access).
+
+I think the provided infrastructure setup should be seen and used as a pattern for the setup in your company not necessarily as a library carved in stone. But let us see how things evolve here.
+
+Some open questions
+
+*Long story short*: I like the new infrastructure setup and I am looking forward to the upcoming improvements of the Azure Developer CLI. What about you?
 
 ## Useful references
 

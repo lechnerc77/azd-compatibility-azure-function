@@ -13,7 +13,7 @@ resource enhancedStorage 'Microsoft.Storage/storageAccounts@2021-09-01' existing
   name: blobStorageName
 }
 
-resource symbolicname 'Microsoft.KeyVault/vaults/secrets@2022-07-01' = {
+resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2022-07-01' = {
   name: secretName
   tags: tags
   parent: keyVault

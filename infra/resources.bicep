@@ -68,16 +68,6 @@ module function './app/function.bicep' = {
   }
 }
 
-module keyVaultAccess './core/security/keyvault-access.bicep' = {
-  name: 'keyvault-access-for-function'
-  params: {
-    environmentName: environmentName
-    location: location
-    keyVaultName: keyVault.outputs.keyVaultName
-    principalId: function.outputs.FUNCTION_IDENTITY_PRINCIPAL_ID
-  }
-}
-
 // Monitor application with Azure Monitor
 module monitoring './core/monitor/monitoring.bicep' = {
   name: 'monitoring'
