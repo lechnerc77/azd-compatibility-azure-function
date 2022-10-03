@@ -254,6 +254,9 @@ I will closely follow the future evolutions and improvements with regards to the
 Useful references if you want to try things out on your own:
 
 - [azd documentation](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview?tabs=nodejs)
+- [azd on GitHub](https://github.com/Azure/azure-dev)
 - [bicep documentation](https://learn.microsoft.com/azure/azure-resource-manager/bicep/)
 - [bicep playground](https://bicepdemo.z22.web.core.windows.net/)
 - [Azure Developer CLI (azd) – September 2022 Release](https://devblogs.microsoft.com/azure-sdk/azure-developer-cli-azd-september-2022-release/) - information and links for Terraform
+- [QuickGlance - Azure Developer CLI](https://youtube.com/playlist?list=PLmZLSvJAm8FbFq2XhqaPZgIzl6kewz1HD)
+- [Azure Developer CLI - How does it know that?](https://dev.to/lechnerc77/azure-developer-cli-how-does-it-know-that-1ngl)
