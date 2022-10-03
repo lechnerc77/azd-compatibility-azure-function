@@ -1,12 +1,12 @@
 # Sample compatibility journey for the Azure Developer CLI - Updates with azd 0.2.0-beta.2
 
-> ⚠ **The steps and the code presented in this branch are described and built in accordance to the new infrastructure setup Azure Developer CLI version [0.2.0-beta.2 (2022-09-21)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.2)**
+> ⚠ **The steps and the code presented in this branch are described and built in accordance to the new infrastructure setup Azure Developer CLI version [0.2.0-beta.2 (2022-09-21)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.2) and later**
 
 ## Introduction
 
-With the update of the Azure Developer CLI to version [0.2.0-beta.2 (2022-09-21)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.2) a change was introduced that affects the structuring of the bicep templates i.e. structuring them via modules (see also pull request [Rearrange Bicep Modules #548](https://github.com/Azure/azure-dev/pull/548)).
+With the update of the Azure Developer CLI to version [0.2.0-beta.2 (2022-09-21)](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.2.0-beta.2) a change was introduced that affects the structuring of the bicep templates i.e., structuring them via modules (see also pull request [Rearrange Bicep Modules #548](https://github.com/Azure/azure-dev/pull/548)).
 
-> 📝 Remark : The setup presented here is also valid with the CLI version [0.3.0-beta.1](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.3.0-beta.1).
+> 📝 Remark: The setup presented here is also valid with the CLI version [0.3.0-beta.1](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.3.0-beta.1).
 
 ## What has changed
 
@@ -16,7 +16,7 @@ Up to the version 0.2.0-beta.1 the `infra` folder contained the bicep files in a
 
 Although this setup is easy to understand and might be a good fit for small projects, it will face some limitations:
 
-- The more complex the setup the bigger the `resources-bicep` file will become. This will decrease the maintainability and the code will be hard to understand. The mitigation would be to split the files. This can again become messy and governance needs to be put in place to assure a uniform structuring across projects.
+- The more complex the setup the bigger the `resources-bicep` file will become. This will decrease the maintainability and the code will be hard to understand. The mitigation would be to split the files. This can again become messy, and governance needs to be put in place to assure a uniform structuring across projects.
 - Some copy and paste must happen in between projects, so even after introducing `azd` as best practice for development teams in a company to unify the infrastructure provisioning each team must take care individually to keep central resource definition up to date.
 
 The creators of the `azd` seem to be well aware of this and their solution proposal is available with version 0.2.0-beta.**2** of the Azure Developer CLI. The main change is that the bicep files are refactored into [modules](https://learn.microsoft.com/azure/azure-resource-manager/bicep/modules). The new `infra` folder has the following structure:
@@ -43,7 +43,7 @@ To get a hands-on impression on these changes I decided to test it for an existi
 
 ### Step 1 - Cleaning up the folders
 
-First I renamed the existing `infra` folder to `infra020beta1` to have my existing and working setup still available and to cross check in case of issues. We can even use this folder in the project by pointing the `azure.yaml` file to the folder:
+First, I renamed the existing `infra` folder to `infra020beta1` to have my existing and working setup still available and to cross check in case of issues. We can even use this folder in the project by pointing the `azure.yaml` file to the folder:
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
@@ -60,16 +60,16 @@ infra:
   path: infra020beta1   
 ```
 
-For this blog post we leave the `infra` section out of the `azure.yaml` file, so that `azd` will use the default which is the `infra` folder. Consequently we create a new folder and call it `infra`. We copy the following files from `infra020beta1` to `infra`:
+For this blog post we leave the `infra` section out of the `azure.yaml` file, so that `azd` will use the default which is the `infra` folder. Consequently, we create a new folder and call it `infra`. We copy the following files from `infra020beta1` to `infra`:
 
 - `abbreviations.json`
 - `main.bicep`
 - `main.parameters.bicep`
 - `resources.bicep`
 
-In order to have the new `core` folder I created an `azd` project from a template and copied the `core` folder as is into the `infra` folder of my Azure Functions project. The content of the `core` folder is independent of the template you used, it always contains *all* reusable `.bicep` files.
+In order to have the new `core` folder I created an `azd` project from a template and copied the `core` folder as is into the `infra` folder of my Azure Functions project. The content of the `core` folder is independent of the template you used; it always contains *all* reusable `.bicep` files.
 
-In addition i created a new folder called `app` which will become the home of my app-specific `.bicep` files. I put two empty files into this folder namely:
+In addition, I created a new folder called `app` which will become the home of my app-specific `.bicep` files. I put two empty files into this folder namely:
 
 - `function.bicep`: this file will contain the modules that need to be called to create the Azure Function
 - `storage-output.bicep`: this folder will contain the modules that need to be called in order create the dedicated storage for the output binding of the Azure Function
@@ -97,7 +97,7 @@ Let us first take a look at the `main.bicep` and the `main.parameters.bicep` fil
 
 ### Step 3 - the `resources.bicep` file
 
-This files gets a completely new setup based on the modules provided in the `core` folder. As we already saw the parameters changed:
+This file gets a completely new setup based on the modules provided in the `core` folder. As we already saw the parameters changed:
 
 ```bicep
 param environmentName string
@@ -105,7 +105,7 @@ param location string = resourceGroup().location
 param principalId string = ''
 ```
 
-In addition we define the secret name for the Blob Storage access here:
+In addition, we define the secret name for the Blob Storage access here:
 
 ```bicep
 var blobStorageSecretName = 'BLOB-CONNECTION-STRING'
@@ -137,10 +137,10 @@ You already see the advantage of the new setup: no more "spaghetti code" for dec
 
 I added the basic module-based setup also for the following resources:
 
-- Storage Account for the Azure Function vai  `./core/storage/storage-account.bicep`
+- Storage Account for the Azure Function via  `./core/storage/storage-account.bicep`
 - Key Vault via `./core/security/keyvault.bicep`.
 
-In accordance to the new setup I added the application specific setups (Azure Function *per se* and the Azure Storage Account for the output binding) via:
+In accordance with the new setup, I added the application specific setups (Azure Function *per se* and the Azure Storage Account for the output binding) via:
 
 ```bicep
 // Second Storage Account for Output Binding
@@ -175,7 +175,7 @@ With the very basic setup in place, we now focus on our specifics.
 
 ### Step 4 - Our special storage setup
 
-For the output binding we need an additional Azure Storage Account. Taking a closer look at the file `storage-account.bicep` in the `core/storage` folder we see that we have no option to influence the name of the storage account e.g. via a postfix. It is predefined by:
+For the output binding we need an additional Azure Storage Account. Taking a closer look at the file `storage-account.bicep` in the `core/storage` folder we see that we have no option to influence the name of the storage account e.g., via a postfix. It is predefined by:
 
 ```bicep
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -184,7 +184,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   name: '${abbrs.storageStorageAccounts}${resourceToken}'
 ```
 
-In addition we need to create a container inside of the storage account which is not foreseen in the current content of the `core` modules. To stay in line with the setup I created a new folder called `corelocal` where I centralized my own reusable modules. I also mimicked the sub-folder structure, so I added a folder `storage`. Now I could add my own Storage Account `bicep` file called `enhanced-storage-account.bicep`:
+In addition, we need to create a container inside of the storage account which is not foreseen in the current content of the `core` modules. To stay in line with the setup I created a new folder called `corelocal` where I centralized my own reusable modules. I also mimicked the sub-folder structure, so I added a folder `storage`. Now I could add my own Storage Account `bicep` file called `enhanced-storage-account.bicep`:
 
 ```bicep
 param environmentName string
@@ -222,7 +222,7 @@ output name string = enhancedStorage.name
 
 Basically, it is a copy & paste from the original one, with some additional logic to add a postfix, that is handed in via a parameter. I created the resource in a way that one could use this template also for the original storage account setup.
 
-In addition, We need a container created in the storage account. For that I created an additional `bicep` file called `storage-container.bicep`:
+In addition, we need a container created in the storage account. For that I created an additional `bicep` file called `storage-container.bicep`:
 
 ```bicep
 param blobStorageName string = ''
@@ -275,7 +275,7 @@ That was not too complicated, so let us move on to the storage of the connection
 
 ### Step 5 - Storing the secret
 
-We want to store the connection string to our Blob Storage in Azure Key Vault and later access it as a reference from the Azure Function app configuration. SO first things first, let us create the secret. As in the previous section there is no pre-defined `bicep` file available, so let us create one. TZo do so I created a `security` folder underneath the `corelocal` folder. Here we place the `bicep` file for the secret:
+We want to store the connection string to our Blob Storage in Azure Key Vault and later access it as a reference from the Azure Function app configuration. First things first, let us create the secret. As in the previous section there is no pre-defined `bicep` file available, so let us create one. To do so I created a `security` folder underneath the `corelocal` folder. Here we place the `bicep` file for the secret:
 
 ```bicep
 param environmentName string
@@ -306,7 +306,7 @@ resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2022-07-01' = {
 
 As we need to attach the secret to the storage and construct the value of our secret using information from the storage account, we must integrate the existing resources into this `bicep` file. To do so we use the `existing` keyword as described in the [official documentation](https://learn.microsoft.com/azure/azure-resource-manager/bicep/existing-resource).
 
-This new modules is then referenced from the `resources.bicep` file with the parameters filled via the output of the corresponding module calls:
+This new module is then referenced from the `resources.bicep` file with the parameters filled via the output of the corresponding module calls:
 
 ```bicep
 // attach output storage to keyvault
@@ -321,7 +321,7 @@ module outputStorageSecret './corelocal/security/keyvault-blobaccess-secret.bice
 }
 ```
 
-This was a bit more tricky (at least for a `bicep` newbie), but doable and fits into the new infrastructure setup.
+This was a bit tricky (at least for a `bicep` newbie), but doable and fits into the new infrastructure setup.
 
 Now we need to bring the pieces together in the Azure Function and the Azure Key Vault to get access to the secret.
 
@@ -332,7 +332,7 @@ What do we need to do to grant the Azure Function app access to the Azure Key Va
 1. Create a system assigned identity for the Azure Functions app
 2. Create the access policy in Key Vault for this identity via its principal ID
 
-Can we achieve that with the existing modules from `core`? Yes we can, but to understand what is going on you must take a dive into the hierarchy for Azure Functions and the Azure Functions app. Let us start from our part, namely the `function.bicep` that we create in the `app` folder:
+Can we achieve that with the existing modules from `core`? Yes, we can, but to understand what is going on you must take a dive into the hierarchy for Azure Functions and the Azure Functions app. Let us start from our part, namely the `function.bicep` that we create in the `app` folder:
 
 ```bicep
 param location string = resourceGroup().location
@@ -370,8 +370,8 @@ For the access we need to make sure that a system assigned identity is created i
 
 We now need to dive into the code of the predefined `bicep` files, to get it:
 
-- from our file the next stop is the `functions-node.bicep`. There is nothing relevant for our investigation, however it is interesting to see the defaulting of some parameters.
-- next stop is the `functions.bicep` file. And here we get our first clue about the managed identity:
+- From our file the next stop is the `functions-node.bicep`. There is nothing relevant for our investigation, however it is interesting to see the defaulting of some parameters.
+- Next stop is the `functions.bicep` file. And here we get our first clue about the managed identity:
 
    ```bicep
    param managedIdentity bool = !(empty(keyVaultName))
@@ -415,9 +415,7 @@ The progress and improvements of the Azure Developer CLI are coming fast. One of
 - In general I think reusable bits and pieces are hard to define up front. I think the Azure Developer CLI team did a good job, guided by the sample code. However, do not fall into the trap to expect everything to be in place in the `core` folder. Embrace the structure and fill in the gaps accordingly as I did for some missing parts in my project.
 - Take your time and go down the rabbit hole of the chain of `bicep` files to get an understand what happens where like how are the configurations merged, how are default values set etc. You get an idea of what I mean when looking at the section [Step 6 - Mind the access](#step-6---mind-the-access).
 
-I think the provided infrastructure setup should be seen and used as a pattern for the setup in your company not necessarily as a library carved in stone. But let us see how things evolve here.
-
-Some open questions
+I think the provided infrastructure setup should be seen and used as a pattern for the setup in your company not necessarily as a library carved in stone. There are also some open questions like where and how to keep the central repository of the `bicep` files and how to propagate changes. But let us see how things evolve.
 
 *Long story short*: I like the new infrastructure setup and I am looking forward to the upcoming improvements of the Azure Developer CLI. What about you?
 
@@ -426,6 +424,10 @@ Some open questions
 Useful references if you want to try things out on your own:
 
 - [azd documentation](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview?tabs=nodejs)
+- [azd on GitHub](https://github.com/Azure/azure-dev)
 - [bicep documentation](https://learn.microsoft.com/azure/azure-resource-manager/bicep/)
 - [bicep playground](https://bicepdemo.z22.web.core.windows.net/)
 - [Azure Developer CLI (azd) – September 2022 Release](https://devblogs.microsoft.com/azure-sdk/azure-developer-cli-azd-september-2022-release/) - information and links for Terraform
+- [QuickGlance - Azure Developer CLI](https://youtube.com/playlist?list=PLmZLSvJAm8FbFq2XhqaPZgIzl6kewz1HD)
+- [The Azure Developer CLI - Compatibility journey for an Azure Functions Project](https://dev.to/lechnerc77/the-azure-developer-cli-compatibility-journey-for-an-azure-functions-project-3mc1)
+- [Azure Developer CLI - How does it know that?](https://dev.to/lechnerc77/azure-developer-cli-how-does-it-know-that-1ngl)
