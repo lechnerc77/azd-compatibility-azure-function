@@ -9,4 +9,4 @@ services:
     language: ts
     host: function 
 infra:
-  path: infra020beta1   
+  path: infra 
