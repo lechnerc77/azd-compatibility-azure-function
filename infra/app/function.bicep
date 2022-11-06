@@ -1,24 +1,30 @@
+param name string
 param location string = resourceGroup().location
-param environmentName string
+param tags object = {}
 
-param applicationInsightsName string
+param allowedOrigins array = []
+param applicationInsightsName string = ''
 param appServicePlanId string
 param appSettings object = {}
+param keyVaultName string
 param serviceName string = 'blob-output-binding'
 param storageAccountName string
-param keyVaultName string = ''
 
-module function '../core/host/functions-node.bicep' = {
+module function '../core/host/functions.bicep' = {
   name: '${serviceName}-functions-node-module'
   params: {
-    environmentName: environmentName
+    name: name
     location: location
+    tags: union(tags, { 'azd-service-name': serviceName })
+    allowedOrigins: allowedOrigins
+    alwaysOn: false
     appSettings: appSettings
     applicationInsightsName: applicationInsightsName
     appServicePlanId: appServicePlanId
-    serviceName: serviceName
-    storageAccountName: storageAccountName
     keyVaultName: keyVaultName
+    runtimeName: 'node'
+    runtimeVersion: '16'
+    storageAccountName: storageAccountName
   }
 }
 
