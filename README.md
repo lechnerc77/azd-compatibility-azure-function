@@ -2,14 +2,15 @@
 
 ## Introduction
 
-The **main** branch of this repository contains the sample code for an *Azure Functions* project with an *output binding* to a Blob Storage. It follows the setup of the *Azure Developer CLI* as of version 0.2.0-beta2 and later.
+The **main** branch of this repository contains the sample code for an *Azure Functions* project with an *output binding* to a Blob Storage. It follows the setup of the *Azure Developer CLI* as of version 0.4.0-beta1 and later.
 
 ## Branches
 
 To go from a sample Azure Functions project to a setup compatible with the Azure Developer CLI comprises some steps. You find these steps including a description in the branches:
 
 - [azd-020-beta1](https://github.com/lechnerc77/azd-compatibility-azure-function/tree/azd-020-beta1): This branch contains the code and the description to make a plain Azure Functions project compatible with the Azure Developer CLI. The related blog post is available on dev.to as [The Azure Developer CLI - Compatibility journey for an Azure Functions Project](https://dev.to/lechnerc77/the-azure-developer-cli-compatibility-journey-for-an-azure-functions-project-3mc1)
-- [azd-020-beta2](https://github.com/lechnerc77/azd-compatibility-azure-function/tree/azd-020-beta2): This branch contains the code and the description to adopt the changes in the infrastructure description that have been introduced with version 0.2.0-beta2. The related blog post is available on dev.to soon.
+- [azd-020-beta2](https://github.com/lechnerc77/azd-compatibility-azure-function/tree/azd-020-beta2): This branch contains the code and the description to adopt the changes in the infrastructure description that have been introduced with version 0.2.0-beta2. The related blog post is available on dev.to as [Azure Developer CLI - The new infrastructure setup](https://dev.to/lechnerc77/azure-developer-cli-the-new-infrastructure-setup-4caj).
+- [azd-040-beta1](https://github.com/lechnerc77/azd-compatibility-azure-function/tree/azd-040-beta1): This branch contains the code and the description to adopt the changes in the infrastructure description that have been introduced with version 0.4.0-beta1. The related blog post is available on dev.to soon.
 
 ## Useful references
 
