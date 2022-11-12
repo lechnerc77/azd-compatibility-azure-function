@@ -52,15 +52,16 @@ to the new setup:
 
 ### The infrastructure setup
 
-The main new hot stuff for me is the restructuring of the `.bicep` infrastructure. Yes they did it again, and I like what that did, as it makes my setup easier and improves the transparency what happens without too many hops due to layers of abstraction. The restructuring has some impact: compared to the prior version there are now:
+The main new hot stuff for me is the restructuring of the `.bicep` infrastructure. Yes they did it again, and I like what they did, as it makes my setup easier and improves the transparency what happens without too many hops due to layers of abstraction. The restructuring has some impact: compared to the prior version there are now:
 
-- different templates with new/different parameters
-- a new structure to find the files
-- new `.bicep` files due to new templates (like the C# one).
+- new/different templates with new/different parameters
+- a new file structure
 
-So as in the prior restructurings of the infrastructure setup I created the Static Web App (SWA) sample for Node.js in a different folder and copied the new `core` folder, as well as the `abbreviations.json` and the `main.parameters.json` into my project. After that I copied the `main.bicep` from my old setup. But wait, isn't there a file missing? Yes and that is one main difference in the new setup compared to prior versions: there is no `resources.bicep` file any more. Everything has moved to `main.bicep`.
+> 📝 Remark: there are also new `.bicep` files due to completely new templates (like the C# one).
 
-The old structure looked like:
+So as in the prior restructurings of the infrastructure setup I created the Static Web App (SWA) sample for Node.js as a blueprint in a different folder. I copied the new `core` folder, as well as the `abbreviations.json` and the `main.parameters.json` into my existing project. After that I copied the `main.bicep` from my old setup. But wait, isn't there a file missing? Yes and that is one main difference in the new setup compared to prior versions: there is no `resources.bicep` file any more. Everything has moved to `main.bicep`.
+
+The old structure looked like this:
 
 ![azd infra folder with version 0.2.0](./assets/infra-020.png)
 
@@ -68,26 +69,24 @@ while the new one has this setup now:
 
 ![azd infra folder with version 0.4.0](./assets/infra-040.png)
 
-> 📝 Remark: Time will show if this is a good approach for complex projects or not. Having said that, this is of course an optional change, you can leave the structure as is, if this is beneficial for your setup.
+> 📝 Remark: Time will show if this is a good approach for complex projects or not. Having said that, this is of course an optional change, you can leave the structure as is, if this is beneficial for your use case.
 
-Now we have a mixed setup with my files from `azd` version 0.2.0-beta.2, i.e., the `app` and the `corelocal` folder with my extensions specific for my setup.
+Now we have a mixed setup with my files from `azd` version 0.2.0-beta.2, i.e., the `app` and the `corelocal` folder with my extensions specific for my use case.
 
-Following the approach of putting everything into the `main.bicep` which at least for my sample setup it makes life a bit easier, I copy all the resource definitions form the old `resources.bicep` into the `main.bicep` - brute force style. That meant: *Welcome to the universe of the curly red underlines* as of course this file is far from being a valid `.bicep` file.
+Following the approach of putting everything into the `main.bicep` which at least for my sample setup it makes life easier, I copy all the resource definitions form the old `resources.bicep` into the `main.bicep` - brute force style. That meant: *Welcome to the universe of the curly red underlines* as of course this file is far from being a valid `.bicep` file.
 
-We broke it, now let's fix it.
-
-I started with the low-hanging fruits by copying the app-agnostic building blocks from the SWA sample to my `main.bicep`. This comprises:
+After breaking it, let's fix it. I started with the low-hanging fruits by copying the app-agnostic building blocks from the SWA sample to my `main.bicep`. This comprises:
 
 - the header with new/additional parameters
 - the new resource group definition
 - the monitoring part
 - the Azure Key Vault part
 
-As the referencing of several parameters pointed in the wrong direction due ot the copy&paste, I had to adjust several parameters like the of of the Azure Key Vault. This was straight forward and supported by the type-ahead support of the bicep extension for VSCode. Now at least some parts of the `main.bicep` became valid again.
+As the referencing of several parameters pointed in the wrong direction due ot the copy&paste action, I had to adjust several parameters like the ones of the Azure Key Vault. This was straight forward and went smooth due to the type-ahead support of the bicep extension for VSCode. After that at least some parts of the `main.bicep` became valid again.
 
-> 📝 Remark: When you do the migration, I recommend to take a look at the new naming conventions for the parameters of the different modules. This is now consistent and enables a more flexible setup of your resources. We will see that in a second.
+> 📝 Remark: When you do the migration, I recommend to take a look at the new naming conventions for the parameters of the different modules. This is consistent over all files and makes a more flexible setup of your resources possible. We will see that in a second.
 
-One additional point that changed in the setup is that the Azure Key Vault access is now an explicit part of the sample setup using the `keyvault-access.bicep` module. This module was already available in the prior versions but was not used. So the Azure Key Vault setup is now built upon two blocks:
+One additional point that changed in the setup is that the Azure Key Vault *access* is now an explicit part of the sample setup using the `keyvault-access.bicep` module. This module was already available in the prior versions but was not used. To the Azure Key Vault comprises two blocks:
 
 ```yaml
 // Store secrets in a keyvault
@@ -113,16 +112,16 @@ module apiKeyVaultAccess './core/security/keyvault-access.bicep' = {
 }
 ```
 
-Here you can see the new clean naming conventions for the resources and the parameters that are consistent over all `.bicep` modules.
+This sample also reflects the clean naming conventions for the resources and the parameters that are consistent over all `.bicep` modules.
 
 The setup of the App service plan as well as for the storage attached to the Azure Function is straightforward and I took that from the SWA sample.
 
-The sample Azure Function I am using has the following specifics:
+With that we can move to the specifics of the sample Azure Function I am using:
 
 - one additional dedicated storage account with a Blob storage container
-- creation of a secret in the Azure Key Vault for accessing the Blob storage
+- a secret in the Azure Key Vault for accessing the Blob storage from the Azure Function
 
-Due to some restrictions, I had to create my own `.bicep` module for the storage as I could not create a storage with a new name there was also no option to specify a container. With the new version this is possible now. This means that I can get rid of my custom built modules and use the modules form the core folder. The setup of my additional storage account looks now like this:
+Due to some restrictions in the previous `azd` version, I had to create my own `.bicep` module for the storage as I could not create a storage with a new name. There was also no option to specify a container within a storage account. With the new `azd` version this is possible. This means that I can get rid of my custom built modules and use the modules from the core folder provided by `azd`. The new setup of my additional storage account looks like this:
 
 ```yaml
 // Second Storage Account for Output Binding
@@ -142,9 +141,9 @@ module outputstorage './core/storage/storage-account.bicep' = {
 }
 ```
 
-That's cool and gives me a cleaner setup. 
+That's cool and gives me a leaner setup.
 
-The definition of the secret is still not part of the `core` modules delivered by Microsoft, so i sticked to my existing one from the prior setup. To be consistent I aligned the parameters with the one of the `core` modules, so the new `keyvault-blobaccess-secret.bicep` looks like:
+The definition of the secret is not (yet) part of the `core` modules delivered by Microsoft, so I sticked to my existing custom module from the prior setup. To be consistent I aligned the parameters with the one of the `core` modules, so the new `keyvault-blobaccess-secret.bicep` looks like:
 
 ```yaml
 param name string
@@ -226,7 +225,9 @@ output FUNCTION_NAME string = function.outputs.name
 output FUNCTION_URI string = function.outputs.uri
 ```
 
-As you can see no more language-specific templates. I like that new setup as I think it is more transparent for the developer without the drawback to make the developer drown in unnecessary complexity. From my point of view the prior setup was more cumbersome. The new parameters need to be reflected in the `main.bicep`, so the corresponding section looks like this:
+As you can see no more language-specific templates. I like that approach as I think it is more transparent for the developer without the drawback to make the developer drown in unnecessary complexity. From my point of view the prior setup although  hiding some parameters was more cumbersome.
+
+The new parameters need to be reflected in the `main.bicep`. The corresponding section looks like this:
 
 ```yaml
 // The function app
@@ -252,14 +253,16 @@ And that was it - everything is up and running again proven by a simple `azd up`
 
 ## More news
 
-Over the last releases soem more improvements have been made (like `azd configure`), you find a complete overview in the following blog posts:
+Over the last releases some more improvements have been made (like `azd configure`), you find a complete overview in the following blog posts:
 
 - [Azure Developer CLI (azd) – October 2022 Release](https://devblogs.microsoft.com/azure-sdk/azure-developer-cli-azd-october-2022-release/)
 - [Azure Developer CLI (azd) – November 2022 Release](https://devblogs.microsoft.com/azure-sdk/azure-developer-cli-azd-november-2022-release/)
 
 ## Summary
 
-It is great to see the continuos improvements around the Azure Developer CLI. Especially the infrastructure part is always moving forward and the usability and developer experience is improving in every iteration (at least this is my experience).
+It is great to see the continuos improvements around the Azure Developer CLI. Especially the infrastructure part is continuously moving forward and the usability as well as the developer experience is improving in every iteration (at least this is my experience).
+
+Looking forward to the next iterations of the tool!
 
 ## Where to find the code
 
