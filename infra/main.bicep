@@ -107,9 +107,9 @@ module apiKeyVaultAccess './core/security/keyvault-access.bicep' = {
   }
 }
 
-//attach output storage to keyvault
-module outputStorageSecret './corelocal/security/keyvault-blobaccess-secret.bicep' = {
-  name: 'keyVaultSecretForBlob'
+// Add Connection String to KeyVault
+module blobStorageConnectionSecret 'app/blobStorageConnectionSecret.bicep' = {
+  name: 'blobStorageConnectionSecret'
   scope: rg
   params: {
     name: blobStorageSecretName
