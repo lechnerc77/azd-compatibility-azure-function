@@ -1,4 +1,4 @@
-# Sample compatibility journey for the Azure Developer CLI - Updates with azd 0.4.0-beta.1
+# Sample compatibility journey for the Azure Developer CLI - Updates with azd 0.5.0-beta.3
 
 > ⚠ **The steps and the code presented in this branch are described and built in accordance to the new infrastructure setup Azure Developer CLI version [0.5.0-beta.3](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.5.0-beta.3) and later**
 
