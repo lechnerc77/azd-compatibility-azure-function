@@ -3,10 +3,19 @@
 name: azure-functions-blob
 metadata:
   template: azure-functions-blob@0.0.1-beta
+hooks:
+  preprovision:
+    shell: pwsh
+    run: Write-Host "Hello from the preprovision hook"
+    interactive: true
+  postprovision:
+    shell: pwsh
+    run: hooks/postprovisionhook.ps1
+    interactive: true
 services:
   blob-output-binding:
     project: src
     language: ts
-    host: function 
+    host: function
 infra:
-  path: infra   
+  path: infra

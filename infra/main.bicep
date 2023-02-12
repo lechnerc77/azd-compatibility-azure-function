@@ -150,8 +150,8 @@ module monitoring './core/monitor/monitoring.bicep' = {
   }
 }
 
-output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
-output APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.applicationInsightsConnectionString
-output FUNCTION_URL string = function.outputs.FUNCTION_URI
-output AZURE_LOCATION string = location
-output AZURE_TENANT_ID string = tenant().tenantId
+output AZD_FUNC_BLOB_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
+output AZD_FUNC_BLOB_APPINSIGHTS_CONNECTION_STRING string = monitoring.outputs.applicationInsightsConnectionString
+output AZD_FUNC_BLOB_FUNCTION_URL string = function.outputs.FUNCTION_URI
+output AZD_FUNC_BLOB_AZURE_LOCATION string = location
+output AZD_FUNC_BLOB_AZURE_TENANT_ID string = tenant().tenantId
