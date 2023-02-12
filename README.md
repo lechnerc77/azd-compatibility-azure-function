@@ -20,9 +20,9 @@ Hence, I will not walk through each and every change but highly recommend to wal
 
 ### Installation/Update
 
-Last time the upgrade of the `azd` CLI on Windows was a bit bumpy. I guess that was due to the move towards the MSI based installation for Windows. This was indeed a bug and it was fixed with this release. So as usual the upgrade of the CLI version went smooth without any hazel. I used the Powershell command described on the GitHb Readme of the `azd` CLI to do the upgrade.
+Last time the upgrade of the `azd` CLI on Windows was a bit bumpy. I guess that was due to the move towards the MSI based installation for Windows. This was indeed a bug and it was fixed with this release. So as usual the upgrade of the CLI version went smooth without any hazel. I used the PowerShell command described on the GitHub README.md of the `azd` CLI to do the upgrade.
 
-You can now also use `winget` or for MacOs users `brew` to install and upgrade your CLI. I did not try that out, as I personally still did not manage to use one single package manager on Windows. Up to now I always needed to use Chocolatey complementing `winget` due to missing packages - I did not check lately, I live with the "instalation mayhem" I am used to.
+You can now also use `winget` or `brew` for MacOS users to install and upgrade your CLI. I did not try that out, as I personally still did not manage to use one single package manager on Windows. Up to now I always needed to use Chocolatey complementing `winget` due to missing packages - I did not check lately, I live with the "installation mayhem" I am used to.
 
 ### The login experience
 
@@ -43,7 +43,7 @@ Up to now that looks good. Now let us switch to the biggest new feature that com
 
 ### New Feature - command and service hooks
 
-When reading about those hooks one song came to my mind ... if you saw Guardians of the Galaxy yoz know what I am talking about right - "Hooked on a feeling" by Blue Swede?
+When reading about these new "hooks" one song came to my mind ... if you saw Guardians of the Galaxy you know what I am talking about right - "Hooked on a feeling" by Blue Swede?
 
 ```shell
 Ooga-Chaka Ooga-Ooga
@@ -54,11 +54,11 @@ That you're in love with me
 [...]
 ```
 
-With this swing we can now dive in the topic itself. In general ths feature gives your additional degrees of freedom by enabling you to customizing your `azd` workflow. This means that at certain points in the `azd` command execution. Why would you need that? Sometimes you might want to execute additional scripted tasks e.g., after your infrastructure was provisioned. With this release you can do that.
+With this swing let us dive in the topic itself. In general, this feature gives you additional degrees of freedom by enabling further customization of the `azd` workflow. This means that at certain points in the `azd` command execution you can add custom logic. Why would you need that? Sometimes you might want to execute additional scripted tasks e.g., after your infrastructure was provisioned. With this release you can do that.
 
-The `azd` team distinguishes two categories of of those hooks namely command hooks and service lifecycle hooks. You can hook your custom logic before and after the command/service lifecycle event. You find the complete list of the supported commands in the [documentation](https://learn.microsoft.com/azure/developer/azure-developer-cli/azd-extensibility).
+`azd` distinguishes two categories of hooks namely *command hooks* and *service lifecycle hooks*. You can hook your custom logic before and after the command/service lifecycle event. You find the complete list of the supported commands in the [documentation](https://learn.microsoft.com/azure/developer/azure-developer-cli/azd-extensibility).
 
-> 📝 Remark: The list of commands in the announcement [blog post](https://devblogs.microsoft.com/azure-sdk/azure-developer-cli-azd-february-2023-release/#new-templates-dapr-python-javascript-and-java) is not complete (the *infradelete events are missing for example), so I recommend to refer to the documentation.
+> 📝 Remark: The list of commands in the announcement [blog post](https://devblogs.microsoft.com/azure-sdk/azure-developer-cli-azd-february-2023-release/#new-templates-dapr-python-javascript-and-java) is not complete (the *infradelete events are missing for example), so I recommend to refer to the documentation to get the complete list.
 
 That sounds like a useful feature. I do not have the necessity of these hooks in the Azure Functions project but I have it in another project, so why not give it a spin and play a bit around with these hooks.
 
@@ -87,7 +87,7 @@ services:
     host: appservice
 ```
 
-As we can see we specify the hooks in a `hooks` section in the `azure.yaml` and specify:
+As we can see we specify the hooks in a `hooks` section and define:
 
 - the event that triggers the hook
 - the shell that should be used
@@ -97,7 +97,7 @@ Looks not too complicated. Let us try it with the samples from the announcement 
 
 ### The sample code - oops
 
-Taking the sample code and adopting it to Powershell results in the following snippet:
+Taking the sample code and adopting it to PowerShell results in the following `azure.yaml`:
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
@@ -127,13 +127,15 @@ But that leads to a validation error in the editor:
 
 The validation originates form the JSON schema available at <https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json>.
 
-> 📝 Remark: What surprised my a bit was that the version of the JSON schema did not change despite the additional content. I would have expected at least a switch to version 1.1, but this si not the case. At least nothing that needs to be  adjusted when upgrading to this `azd` version.
+> 📝 Remark: I was a bit surprised that the version of the JSON schema did not change despite the additional content. I would have expected at least a switch to version 1.1, but this is not the case. At least nothing that needs to be  adjusted when upgrading to the new `azd` version.
 
-Looking into the corresponding section of the file, you will see that the there are no hooks defined for the `azd init` command. Maybe just an issue in the JSON schema and the `azd` CLI know about the event. But also after trying out the command with the `azure.yaml` from above, no hint that the hook was recognized. Okay so small issue with the sample code. Let us give it a try with another event like `preinfradelete`.
+Looking into the corresponding section of the JSON schema, you will see that the there are no hooks defined for the `azd init` command. Maybe just an issue in the JSON schema and the `azd` CLI know about the event. But also after trying out the command with the `azure.yaml` from above, no hint that the hook was recognized. Okay so small issue with the sample code. 
+
+Let us give it a try with another event namely `preinfradelete`.
 
 ### Interactive or not interactive - that's the question
 
-I adjusted the `azure.yaml` to check the `preinfradelete`:
+I adjusted the `azure.yaml` to execute the `preinfradelete` hook:
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
@@ -158,14 +160,14 @@ Giving this configuration a try results in:
 
 ![azd hook non-interactive](./assets/non-interactive-hook.png)
 
-Obviously the hook was recognized (and maybe executed), but where is the "Hello from the preinfradelete hook"? Documentation for the rescue!
+Obviously the hook was recognized (and maybe executed), but where is the "Hello from the preinfradelete hook" output? Documentation for the rescue!
 
 There are two more options when defining the configuration for an event namely:
 
 - `interactive`: When set will bind the running script to the console `stdin`, `stdout` & `stderr` (default false).
 - `continueOnError`: When set will continue to execute even after a script error occurred during a command hook (default false).
 
-So the `interactive` is needed otherwise you will not see the output as it is defaulted to `false`. Next try with:
+The `interactive: true` is needed otherwise you will not see the output. Next try with:
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
@@ -191,7 +193,9 @@ Result:
 
 ![azd hook interactive](./assets/interactive-hook.png)
 
-That did the trick. Something that should be added to the corresponding code samples, but first success. Let us check out some more things.
+That did the trick. Something that should be added to the corresponding code samples. But first success to celebrate on our side. 
+
+Let us try out some more things.
 
 ### azd up - one command to rule them all, but what about the hook
 
@@ -225,11 +229,11 @@ infra:
 
 Result:
 
-![azd hook interactive](./assets/up-hook-sequence.png)
+![azd hook sequence](./assets/up-hook-sequence.png)
 
 All hooks are executed and they are executed sequentially where the `preup` event is the very first one. This is important to keep in mind to avoid duplicate executions of activities or scripts.
 
-What can we try out next? The hooks allow a OS dependent definition of the content of the hooks, so we not look at that
+What can we try out next? The hooks allow a OS dependent definition of the hook configuration, let us take a look at that.
 
 ### OS dependency
 
@@ -259,7 +263,7 @@ services:
     host: appservice
 ```
 
-Adopting that to my project and just giving Windows a try my yaml looks like this:
+Adopting that to my project and just giving Windows a try my `azure.yaml` looks like this:
 
 ```yaml
 name: azure-functions-blob
@@ -288,7 +292,7 @@ And as for the `preinit` scenario the editor shows a validation issue:
 
 ![azd hook os specifics](./assets/os-specific-hook-validation.png)
 
-Hmmm...checking the JSON schema the reason for that becomes clear:
+Hmmm ... checking the JSON schema the reason for that becomes clear:
 
 ```json
  "definitions": {
@@ -318,15 +322,17 @@ Hmmm...checking the JSON schema the reason for that becomes clear:
 
 `run` is required and defined on top level. The OS dependencies are part of the hook definition, so even when specifying the OS the validation fails due to a missing top-level `run` key.
 
-In contrast to `preinit`, the OS dependency *per se* is part of the schema, so let us check if the `azd` CLI can deal with the inconsistent `azure-yaml` file by executing it. It can, so the issue is just the JSON schema that needs to be corrected.
+In contrast to `preinit`, the OS dependency *per se* is part of the schema, so let us check if the `azd` CLI can deal with the inconsistent `azure.yaml` file by executing it. 
 
-That's good as this way all developers feel included when using `azd` no matter what OS they are running on. This is *highly appreciated* as I often struggle with not having a Mac.
+The result is: It can, so the issue is just the JSON schema that needs to be corrected.
+
+That's good as this way all developers feel included when using `azd` no matter what OS they are running on. This is *highly appreciated* as I often struggle with not having a Mac and at tooling often treats them as first class citizen.
 
 ### How do I get the variables after provisioning
 
 Okay so as we now know the mechanics of the hooks, I have one more question. If I want to do some additional actions after provisioning the infrastructure, how can I get to the relevant information, like the URL of an endpoint when the `azd` flow is running?
 
-Are they available as environment variables during the execution of `azd`? Let us find it out by adding a Powershell script that is executed in the `postprovison` hook:
+Is this information available as environment variables during the execution of `azd`? Let us find it out by adding a PowerShell script that is executed in the `postprovison` hook:
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
@@ -362,7 +368,7 @@ Write-Host "Here are the env variables after provisioning"
 Get-ChildItem Env: | Sort-Object Name | Format-Table -Wrap
 ```
 
-The execution of `azd provison` picks up the hook and shows that they are indeed available:
+The execution of `azd provison` picks up the hook and shows that they are indeed available as environment variables:
 
 ![azd env variables](./assets/env-variables.png)
 
@@ -371,7 +377,7 @@ We find the following data that we can use for our script:
 - The data from `.azure/<your project name>/.env` is available via environment variables
 - the data defined as output in the `main.bicep` file is available via environment variables
 
-That is good to know especially for the other project I mentioned before where I indeed need this kind of data.
+That is good to know especially for the other project I mentioned before where I need this data.
 
 Having said that I redefined the names of my outputs from the `main.bicep` in order to have a consistent prefix:
 
@@ -391,9 +397,9 @@ I do not know if this makes sense or helps on the long run. Time and a project l
 
 The hooks are a very powerful way to extend and configure `azd`. Nevertheless I am convinced that with this great power of flexibility comes great responsibility.
 
-With that in mind it might be great to get some guidance and best practices for the usage of hooks starting in structuring them. The sample code points to use a dedicated directory for gathering the scripts. What is the best way to go from there with regards to things like naming conventions, usage of scripts in different environments.
+With that in mind it might be great to get some guidance and best practices for the usage of hooks starting in how to structure them. The sample code points to use a dedicated directory for collecting the scripts. What is the best way to go from there with regards to things like naming conventions, usage of scripts in different environments etc.
 
-Some examples in the samples would also be useful to see the best practices in action, but also to get some ideas what are typical use cases and maybe what you should not do in the hooks.
+Some examples in the samples/templates would be useful to see the best practices in action, but also to get some ideas what are typical use cases and maybe what you should *not* do in the hooks.
 
 As the release of the hooks is brand-new, I assume that over the course of the upcoming weeks samples leveraging hooks and guidelines how to use them best will follow.
 
