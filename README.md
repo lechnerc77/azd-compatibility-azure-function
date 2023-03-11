@@ -2,6 +2,8 @@
 
 > ⚠ **The steps and the code presented in this branch are described and built in accordance to the new infrastructure setup Azure Developer CLI version [0.6.0-beta.2](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.6.0-beta.2) and later**
 
+> ⚠ **Note** - All updates in the `azd` version 0.7.0 (see [release notes](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.7.0-beta.1)) do not imply any changes in the project setup. So this branch can also be used with version 0.7.0-beta1 without any changes or adjustments.
+
 ## Introduction
 
 It is the beginning of February and that means ... (short drum roll) ... the new monthly version of the Azure Developer CLI is out! So welcome version [0.6.0-beta2](https://github.com/Azure/azure-dev/releases/tag/azure-dev-cli_0.6.0-beta.2).
